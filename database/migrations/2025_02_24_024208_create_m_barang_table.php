@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('m_barang', function (Blueprint $table) {
             $table->id('barang_id'); // Kolom id sebagai primary key otomatis
-            $table->unsignedBigInteger('kategori_id'); // kolom kategori_id (foreign key)
+            $table->unsignedBigInteger('kategori_id') ->index() ; // kolom kategori_id (foreign key)
             $table->string('barang_kode', 10); // kolom barang_kode (string, panjang 10)
             $table->string('barang_nama', 100); // kolom barang_nama (string, panjang 100)
             $table->integer('harga_jual'); // kolom harga_jual (integer)

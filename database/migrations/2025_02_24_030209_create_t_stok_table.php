@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('barang_id'); // kolom barang_id (foreign key)
             $table->unsignedBigInteger('user_id'); // kolom user_id (foreign key)
             $table->dateTime('stok_tanggal'); // kolom stok_tanggal (datetime)
-            $table->integer('stok_jumlah'); // kolom stok_jumlah (integer)
+            $table->unsignedBigInteger('stok_jumlah'); // kolom stok_jumlah (integer)
             $table->timestamps(); // kolom created_at dan updated_at
             
             // Menambahkan foreign key (supplier_id merujuk ke tabel supplier)
