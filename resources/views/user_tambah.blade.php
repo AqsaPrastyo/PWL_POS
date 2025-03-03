@@ -1,0 +1,22 @@
+<html>
+    <body>
+        <h1>Form Tambah Data User</h1>
+        <form method="post" action="/user/tambah_simpan/{{$data->username}}" >
+        {{csrf_field()}}
+
+        <label>Username</label><br>
+        <input type="text" name="username" placeholder="Masukan Username">
+        <br>
+        <label>Nama</label>
+        <input type="text" name="nama" placeholder="Masukan Nama">
+        <br>
+        <label>Password</label>
+        <input type="text" name="password" placeholder="Masukan Password">
+        <br>
+        <label>Level ID</label>
+        <input type="number" name="level_id" placeholder="Masukan Level ID">
+        <br><br>
+        <input type="Submit" class="btn btn-success" value="Simpan" >
+    </form>
+    </body>
+</html>
