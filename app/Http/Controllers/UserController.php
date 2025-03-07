@@ -12,7 +12,7 @@ class UserController extends Controller
 
 
         $user = UserModel::with('level')->get();
-        
+    
     return view('user', ['data' => $user]);
 
     }

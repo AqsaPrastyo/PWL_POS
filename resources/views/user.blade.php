@@ -47,7 +47,7 @@
                 <tr>
                     <td>{{$data->user_id}}</td>
                     <td>{{$data->username}}</td>
-                    <td>{{$data->name}}</td>
+                    <td>{{$data->nama}}</td>
                     <td>{{$data->level_id}}</td>
                     <td>{{$data->level->level_kode}}</td>
                     <td>{{$data->level->level_nama}}</td>
