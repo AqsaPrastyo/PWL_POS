@@ -43,17 +43,17 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($data as $data)
+                @foreach ($data as $d)
                 <tr>
-                    <td>{{$data->user_id}}</td>
-                    <td>{{$data->username}}</td>
-                    <td>{{$data->nama}}</td>
-                    <td>{{$data->level_id}}</td>
-                    <td>{{$data->level->level_kode}}</td>
-                    <td>{{$data->level->level_nama}}</td>
+                    <td>{{$d->user_id}}</td>
+                    <td>{{$d->username}}</td>
+                    <td>{{$d->nama}}</td>
+                    <td>{{$d->level_id}}</td>
+                    <td>{{$d->level->level_kode}}</td>
+                    <td>{{$d->level->level_nama}}</td>
                     <td>
-                        <a href="/user/ubah/{{$data->user_id}}" class="btn btn-warning btn-sm">Ubah</a>
-                        <a href="/user/hapus/{{$data->user_id}}" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?');">Hapus</a>
+                        <a href="/user/ubah/{{$d->user_id}}" class="btn btn-warning btn-sm">Ubah</a>
+                        <a href="/user/hapus/{{$d->user_id}}" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?');">Hapus</a>
                     </td>
                 </tr>
                 @endforeach
