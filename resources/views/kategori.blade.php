@@ -14,13 +14,12 @@
     <th>Kode kategorti</th>
     <th>Nama kategori</th>
 </tr>
-@foreach ($data as $d)
+@foreach ($data as $da)
 <tr>
-    <td>{{$d->kategori_id}}</td>
-    <td>{{$d->kategori_kode}}</td>
-    <td>{{$d->kategori_nama}}</td>
+    <td>{{$da->kategori_id}}</td>
+    <td>{{$da->kategori_kode}}</td>
+    <td>{{$da->kategori_nama}}</td>
 </tr>
-    
 @endforeach
     </table>
 </body>
