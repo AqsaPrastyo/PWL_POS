@@ -33,6 +33,7 @@ Route::group(['prefix' => 'user'], function () {
     Route::put('/{id}', [UserController::class, 'update']);
     Route::get('/{id}/edit_ajax', [UserController::class,'edit_ajax']);
     Route::post('/{id}/update_ajax', [UserController::class,'update_ajax']);
+    Route::get('/{id}/show_ajax', [UserController::class,'show_ajax']);
     Route::delete('/{id}', [UserController::class, 'destroy']);
 });
 
