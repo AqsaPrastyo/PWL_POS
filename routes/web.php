@@ -63,9 +63,16 @@ Route::group(['prefix' => 'barang'], function () {
     Route::post('/list', [BarangController::class, 'list']);
     Route::get('/create', [BarangController::class, 'create']);
     Route::post('/', [BarangController::class, 'store']);
+    Route::get('/create_ajax', [KategoriController::class, 'create_ajax']);
+    Route::post('/store_ajax', [KategoriController::class, 'store_ajax']);
     Route::get('/{id}', [BarangController::class, 'show']);
     Route::get('/{id}/edit', [BarangController::class, 'edit']);
     Route::put('/{id}', [BarangController::class, 'update']);
+    Route::get('/{id}/show_ajax', [KategoriController::class, 'show_ajax']);
+     Route::get('/{id}/edit_ajax', [KategoriController::class, 'edit_ajax']);
+     Route::put('/{id}/update_ajax', [KategoriController::class, 'update_ajax']);
+     Route::get('/{id}/delete_ajax', [KategoriController::class, 'confirm_ajax']);
+     Route::delete('/{id}/delete_ajax', [KategoriController::class, 'delete_ajax']);
     Route::delete('/{id}', [BarangController::class, 'destroy']);
 });
 
