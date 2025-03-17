@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamps(); // kolom created_at dan updated_at
             
             // Menambahkan foreign key (kategori_id merujuk ke tabel kategori)
-            $table->foreign('kategori_id')->references('kategori_id')->on('m_kategori')->onDelete('cascade');
+            $table->foreign('kategori_id')->references('kategori_id')->on('m_kategori');
         });
     }
     

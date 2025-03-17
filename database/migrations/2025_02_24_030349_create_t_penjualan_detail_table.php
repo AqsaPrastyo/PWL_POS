@@ -20,10 +20,10 @@ return new class extends Migration
         $table->timestamps(); // kolom created_at dan updated_at
         
         // Menambahkan foreign key (penjualan_id merujuk ke tabel t_penjualan)
-        $table->foreign('penjualan_id')->references('penjualan_id')->on('t_penjualan')->onDelete('cascade');
+        $table->foreign('penjualan_id')->references('penjualan_id')->on('t_penjualan');
         
         // Menambahkan foreign key (barang_id merujuk ke tabel m_barang)
-        $table->foreign('barang_id')->references('barang_id')->on('m_barang')->onDelete('cascade');
+        $table->foreign('barang_id')->references('barang_id')->on('m_barang');
     });
 }
 

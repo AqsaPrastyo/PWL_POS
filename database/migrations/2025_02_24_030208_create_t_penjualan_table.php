@@ -20,7 +20,7 @@ return new class extends Migration
         $table->timestamps(); // kolom created_at dan updated_at
         
         // Menambahkan foreign key (user_id merujuk ke tabel users)
-        $table->foreign('user_id')->references('user_id')->on('m_user')->onDelete('cascade');
+        $table->foreign('user_id')->references('user_id')->on('m_user');
     });
 }
 
