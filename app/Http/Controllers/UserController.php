@@ -83,7 +83,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'username' => 'required|string|min:3| unique:m_user, username',
+            'username' => 'required|string|min:3|unique:m_user,username',
             'nama' => 'required|string|max:100',
             'password' => 'required|min:5',
             'level_id' => 'required|integer'
@@ -133,9 +133,9 @@ class UserController extends Controller
         $request->validate([
 
 
-            'username' => 'required|string |min: 3 unique:m_user, username, ' . $id . ', user_id',
-            'nama' => 'required string | max: 100',
-            'password' => 'nullable |min:5',
+            'username' => 'required|string|min:3|unique:m_user,username, ' . $id . ', user_id',
+            'nama' => 'required|string|max: 100',
+            'password' => 'nullable|min:5',
             'level_id' => 'required|integer'
         ]);
 
@@ -216,7 +216,7 @@ class UserController extends Controller
         $user = UserModel::find($id);
         $level = LevelModel::select('level_id', 'level_nama')->get();
 
-        return view('user.edit_ajax',['user' => $user, 'level' => $level]);
+        return view('user.edit_ajax', compact('user', 'level'));
     }
 
     public function update_ajax(Request $request, $id)
@@ -254,13 +254,14 @@ class UserController extends Controller
                 ]);
             }
         }
-        return redirect('/');
+        return redirect('/user');
     }
-    public function confirm_ajax(String $id)
+
+    public function confirm_ajax(string $id)
     {
         $user = UserModel::find($id);
 
-        return view('user.confirm_ajax', ['user'=> $user]);
+        return view('user.confirm_ajax', ['user' => $user]);
     }
 
     public function delete_ajax(Request $request, $id)
@@ -287,10 +288,6 @@ class UserController extends Controller
                 ]);
             }
         }
-
-        
-
-        
         return redirect('/user');
     }
 
@@ -300,75 +297,131 @@ class UserController extends Controller
     }
 
     public function import_ajax(Request $request)
-{
-    if ($request->ajax() || $request->wantsJson()) {
-        $rules = [
-            // validasi file harus xlsx, max 1MB
-            'file_user' => [ 'max:1024']
-        ];
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            $rules = [
+                'file_user' => ['required', 'mimes:xlsx', 'max:1024']
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validasi Gagal',
+                    'msgField' => $validator->errors()
+                ]);
+            }
 
-        $validator = Validator::make($request->all(), $rules);
+            $file = $request->file('file_user');
+            $reader = IOFactory::createReader('Xlsx');
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $data = $sheet->toArray(null, false, true, true);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validasi Gagal' . $validator->errors(),
-                'msgField' => $validator->errors()
-            ]);
-        }
+            $insert = [];
+            $errors = [];
 
-        try {
-        $file = $request->file('file_user'); // ambil file dari request
-        $reader = IOFactory::createReader('Xlsx'); // load reader file excel
-        $reader->setReadDataOnly(true); // hanya membaca data
-        $spreadsheet = $reader->load($file->getRealPath()); // load file excel
-        $sheet = $spreadsheet->getActiveSheet(); // ambil sheet yang aktif
-        $data = $sheet->toArray(null, false, true, true); // ambil data excel
-        }
-        catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'File tidak valid! Pastikan file yang diupload adalah file excel dengan format .xlsx' . $e,
-            ]);
-        }
-        $insert = [];
+            if (count($data) > 1) {
+                foreach ($data as $baris => $value) {
+                    if ($baris > 1) {
+                        // Validate level_id exists
+                        $level = LevelModel::where('level_id', $value['C'])->first();
+                        if (!$level) {
+                            $errors[] = "Baris {$baris}: Level ID {$value['C']} tidak ditemukan";
+                            continue;
+                        }
 
-        if (count($data) > 1) { // jika data lebih dari 1 baris
-            foreach ($data as $baris => $value) {
-                if ($baris > 1) { // baris ke-1 adalah header, maka lewati
-                    $insert[] = [
-                        'level_id' => $value['A'],
-                        'username' => $value['B'],
-                        'nama' => $value['C'],
-                        'password' => bcrypt($value['D'] ?? '123456'),
-                        'created_at' => now(),
-                    ];
+                        // Check if username already exists
+                        $existingUser = UserModel::where('username', $value['A'])->first();
+                        if ($existingUser) {
+                            $errors[] = "Baris {$baris}: Username {$value['A']} sudah digunakan";
+                            continue;
+                        }
+
+                        $insert[] = [
+                            'username' => $value['A'],
+                            'nama' => $value['B'],
+                            'level_id' => $value['C'],
+                            'password' => bcrypt($value['D'] ?? '123456'), // Default password if not provided
+                            'created_at' => now(),
+                        ];
+                    }
                 }
-            }
-            error_log('---------------------------------------');
-            if (count($insert) > 0) {
-                // insert data ke database, jika data sudah ada, maka diabaikan
-                UserModel::insertOrIgnore($insert);
-                error_log('Data berhasil diimport');
-                error_log('Jumlah data yang diimport: ' . count($insert));
-                error_log('Data yang diimport: ' . json_encode($insert));
-            }
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Data berhasil diimport'
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'Tidak ada data yang diimport'
-            ]);
+                if (count($insert) > 0) {
+                    UserModel::insert($insert);
+
+                    $message = 'Data berhasil diimport';
+                    if (count($errors) > 0) {
+                        $message .= ', tetapi beberapa data gagal: ' . implode(', ', $errors);
+                    }
+
+                    return response()->json([
+                        'status' => true,
+                        'message' => $message
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Tidak ada data valid yang diimport. ' . implode(', ', $errors)
+                    ]);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Tidak ada data yang diimport'
+                ]);
+            }
         }
+        return redirect('/');
     }
 
-    return redirect('/');
+    public function export_excel()
+    {
+        $users = UserModel::select('user_id', 'username', 'nama', 'level_id')
+            ->with('level')
+            ->orderBy('user_id')
+            ->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('A1', 'No');
+        $sheet->setCellValue('B1', 'Username');
+        $sheet->setCellValue('C1', 'Nama');
+        $sheet->setCellValue('D1', 'Level');
+        $sheet->getStyle('A1:D1')->getFont()->setBold(true);
+
+        $no = 1;
+        $baris = 2;
+
+        foreach ($users as $value) {
+            $sheet->setCellValue('A' . $baris, $no);
+            $sheet->setCellValue('B' . $baris, $value->username);
+            $sheet->setCellValue('C' . $baris, $value->nama);
+            $sheet->setCellValue('D' . $baris, $value->level->level_nama);
+            $baris++;
+            $no++;
+        }
+
+        foreach (range('A', 'D') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        $sheet->setTitle('Data User');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $filename = 'Data User '.date('Y-m-d H:i:s').'.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Cache-Control: max-age=0');
+        header('Cache-Control: max-age=1');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        header('Last-Modified: '. gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Cache-Control: cache, must-revalidate');
+        header('Pragma: public');
+
+        $writer->save('php://output');
+        exit;
+    }
 }
-
-
-}
-
