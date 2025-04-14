@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use App\Models\LevelModel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class UserController extends Controller
 {
@@ -286,6 +287,88 @@ class UserController extends Controller
                 ]);
             }
         }
+
+        
+
+        
         return redirect('/user');
     }
+
+    public function import()
+    {
+        return view('user.import');
+    }
+
+    public function import_ajax(Request $request)
+{
+    if ($request->ajax() || $request->wantsJson()) {
+        $rules = [
+            // validasi file harus xlsx, max 1MB
+            'file_user' => [ 'max:1024']
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validasi Gagal' . $validator->errors(),
+                'msgField' => $validator->errors()
+            ]);
+        }
+
+        try {
+        $file = $request->file('file_user'); // ambil file dari request
+        $reader = IOFactory::createReader('Xlsx'); // load reader file excel
+        $reader->setReadDataOnly(true); // hanya membaca data
+        $spreadsheet = $reader->load($file->getRealPath()); // load file excel
+        $sheet = $spreadsheet->getActiveSheet(); // ambil sheet yang aktif
+        $data = $sheet->toArray(null, false, true, true); // ambil data excel
+        }
+        catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'File tidak valid! Pastikan file yang diupload adalah file excel dengan format .xlsx' . $e,
+            ]);
+        }
+        $insert = [];
+
+        if (count($data) > 1) { // jika data lebih dari 1 baris
+            foreach ($data as $baris => $value) {
+                if ($baris > 1) { // baris ke-1 adalah header, maka lewati
+                    $insert[] = [
+                        'level_id' => $value['A'],
+                        'username' => $value['B'],
+                        'nama' => $value['C'],
+                        'password' => bcrypt($value['D'] ?? '123456'),
+                        'created_at' => now(),
+                    ];
+                }
+            }
+            error_log('---------------------------------------');
+            if (count($insert) > 0) {
+                // insert data ke database, jika data sudah ada, maka diabaikan
+                UserModel::insertOrIgnore($insert);
+                error_log('Data berhasil diimport');
+                error_log('Jumlah data yang diimport: ' . count($insert));
+                error_log('Data yang diimport: ' . json_encode($insert));
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data berhasil diimport'
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tidak ada data yang diimport'
+            ]);
+        }
+    }
+
+    return redirect('/');
 }
+
+
+}
+
