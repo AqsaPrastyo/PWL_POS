@@ -114,6 +114,7 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{id}', [KategoriController::class, 'destroy']);
             Route::get('/import', [KategoriController::class, 'import']);
             Route::post('/import_ajax', [KategoriController::class, 'import_ajax']);
+            Route::get('/export_excel', [KategoriController::class, 'export_excel']);
         });
     });
     Route::middleware(['authorize:MNG,ADM,STF,JTP'])->group(function () {
