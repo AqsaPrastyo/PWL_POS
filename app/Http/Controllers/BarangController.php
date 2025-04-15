@@ -8,6 +8,7 @@ use App\Models\KategoriModel;
 use App\Models\BarangModel;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BarangController extends Controller
 {
@@ -382,5 +383,24 @@ class BarangController extends Controller
         header('Pragma: public');
         $writer->save('php://output');
         exit;
+    }
+
+    public function export_pdf()
+    {
+    $barang = BarangModel::select('kategori_id', 'barang_kode', 'barang_nama', 'harga_beli', 'harga_jual')
+    ->orderBy('kategori_id')
+    ->orderBy('barang_kode')
+    ->with('kategori')
+    ->get();
+
+    $pdf = Pdf::loadView('barang.export_pdf', ['barang' => $barang]);
+    $pdf->setPaper('A4', 'potrait');
+    $pdf->setOptions(['isRemoteEnabled' => true]);
+    $pdf->render();
+    return $pdf->download('Data Barang '.date('Y-m-d H:i:s').'.pdf');
+   
+
+
+
     }
 }
