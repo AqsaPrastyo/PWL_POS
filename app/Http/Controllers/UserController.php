@@ -9,6 +9,7 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use App\Models\LevelModel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class UserController extends Controller
 {
@@ -97,7 +98,7 @@ class UserController extends Controller
         return redirect('/user')->with('success', 'Data user berhasil disimpan');
     }
 
-    public function show(String $id)
+    public function show(string $id)
     {
         $user = UserModel::with('level')->find($id);
         $breadcrumb = (object) [
@@ -111,7 +112,7 @@ class UserController extends Controller
         return view('user.show', compact('breadcrumb', 'page', 'user', 'activeMenu'));
     }
 
-    public function edit(String $id)
+    public function edit(string $id)
     {
         $user = UserModel::find($id);
         $level = LevelModel::all();
@@ -203,7 +204,7 @@ class UserController extends Controller
         return redirect('/');
     }
 
-    public function show_ajax(String $id)
+    public function show_ajax(string $id)
     {
         $user = UserModel::find($id);
         $level = LevelModel::select('level_id', 'level_nama')->get();
@@ -211,7 +212,7 @@ class UserController extends Controller
         return view('user.show_ajax', compact('user', 'level'));
     }
 
-    public function edit_ajax(String $id)
+    public function edit_ajax(string $id)
     {
         $user = UserModel::find($id);
         $level = LevelModel::select('level_id', 'level_nama')->get();
@@ -410,18 +411,33 @@ class UserController extends Controller
 
         $sheet->setTitle('Data User');
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        $filename = 'Data User '.date('Y-m-d H:i:s').'.xlsx';
+        $filename = 'Data User ' . date('Y-m-d H:i:s') . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="'.$filename.'"');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Cache-Control: max-age=0');
         header('Cache-Control: max-age=1');
         header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-        header('Last-Modified: '. gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
         header('Cache-Control: cache, must-revalidate');
         header('Pragma: public');
 
         $writer->save('php://output');
         exit;
+    }
+
+    public function export_pdf()
+    {
+        $users = UserModel::select('user_id', 'username', 'nama', 'level_id')
+            ->with('level')
+            ->orderBy('user_id')
+            ->get();
+
+        $pdf = Pdf::loadView('user.export_pdf', ['users' => $users]);
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->setOptions(['isRemoteEnabled' => true]);
+        $pdf->render();
+
+        return $pdf->download('Data User ' . date('Y-m-d H:i:s') . '.pdf');
     }
 }
