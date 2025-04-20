@@ -21,40 +21,45 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-Route::get('/register', [AuthController::class, 'register'])->name('register');
-Route::post('/register', [AuthController::class, 'postregister']);
-Route::pattern('id', '[0-9]+'); 
+
+Route::pattern('id', '[0-9]+');
 Route::get('login', [AuthController::class, 'login'])->name('login');
 Route::post('login', [AuthController::class, 'postlogin']);
 Route::get('logout', [AuthController::class, 'logout'])->middleware('auth');
 
+Route::get('register', [AuthController::class, 'showRegistrationForm'])->name('register');
+Route::post('register', [AuthController::class, 'register']);
+
+
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/', [WelcomeController::class, 'index']);
-    Route::group(['prefix' => 'user'], function () {
-        Route::get('/', [UserController::class, 'index']);
-        Route::post('/list', [UserController::class, 'list']);
-        Route::get('/create', [UserController::class, 'create']);
-        Route::post('/', [UserController::class, 'store']);
-        Route::get('/create_ajax', [UserController::class, 'create_ajax']);
-        Route::post('/store_ajax', [UserController::class, 'store_ajax']);
-        Route::get('/{id}', [UserController::class, 'show']);
-        Route::get('/{id}/edit', [UserController::class, 'edit']);
-        Route::put('/{id}', [UserController::class, 'update']);
-        Route::get('/{id}/show_ajax', [UserController::class, 'show_ajax']);
-        Route::get('/{id}/edit_ajax', [UserController::class, 'edit_ajax']);
-        Route::put('/{id}/update_ajax', [UserController::class, 'update_ajax']);
-        Route::get('/{id}/delete_ajax', [UserController::class, 'confirm_ajax']);
-        Route::delete('/{id}/delete_ajax', [UserController::class, 'delete_ajax']);
-        Route::delete('/{id}', [UserController::class, 'destroy']);
-        Route::get('/import', [UserController::class, 'import']);
-        Route::post('/import_ajax', [UserController::class, 'import_ajax']);
-        Route::get('/export_excel', [UserController::class, 'export_excel']);
-        Route::get('/export_pdf', [UserController::class, 'export_pdf']);
-        Route::get('/user/export_pdf', [UserController::class, 'export_pdf']);
+
+    Route::middleware(['authorize:ADM,MNG'])->group(function () {
+        Route::group(['prefix' => 'user'], function () {
+            Route::get('/', [UserController::class, 'index']);
+            Route::post('/list', [UserController::class, 'list']);
+            Route::get('/create', [UserController::class, 'create']);
+            Route::post('/', [UserController::class, 'store']);
+            Route::get('/create_ajax', [UserController::class, 'create_ajax']);
+            Route::post('/store_ajax', [UserController::class, 'store_ajax']);
+            Route::get('/{id}', [UserController::class, 'show']);
+            Route::get('/{id}/edit', [UserController::class, 'edit']);
+            Route::put('/{id}', [UserController::class, 'update']);
+            Route::get('/{id}/show_ajax', [UserController::class, 'show_ajax']);
+            Route::get('/{id}/edit_ajax', [UserController::class, 'edit_ajax']);
+            Route::put('/{id}/update_ajax', [UserController::class, 'update_ajax']);
+            Route::get('/{id}/delete_ajax', [UserController::class, 'confirm_ajax']);
+            Route::delete('/{id}/delete_ajax', [UserController::class, 'delete_ajax']);
+            Route::delete('/{id}', [UserController::class, 'destroy']);
+            Route::get('/import', [UserController::class, 'import']);
+            Route::post('/import_ajax', [UserController::class, 'import_ajax']);
+            Route::get('/export_excel', [UserController::class, 'export_excel']);
+            Route::get('/export_pdf', [UserController::class, 'export_pdf']);
+        });
     });
-    
-    Route::middleware(['authorize:ADM,JTP'])->group(function () {
+
+    Route::middleware(['authorize:ADM,MNG'])->group(function () {
         Route::group(['prefix' => 'level'], function () {
             Route::get('/', [LevelController::class, 'index']);
             Route::post('/list', [LevelController::class, 'list']);
@@ -77,8 +82,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/export_pdf', [LevelController::class, 'export_pdf']);
         });
     });
-    
-    Route::middleware(['authorize:MNG,ADM,KSR,STF,JTP'])->group(function () {
+
+    Route::middleware(['authorize:ADM,MNG,STF'])->group(function () {
         Route::group(['prefix' => 'barang'], function () {
             Route::get('/', [BarangController::class, 'index']);
             Route::post('/list', [BarangController::class, 'list']);
@@ -101,7 +106,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/export_pdf', [BarangController::class, 'export_pdf']);
         });
     });
-    Route::middleware(['authorize:MNG,ADM,KSR,STF,JTP'])->group(function () {
+
+    Route::middleware(['authorize:ADM,MNG,STF'])->group(function () {
         Route::group(['prefix' => 'kategori'], function () {
             Route::get('/', [KategoriController::class, 'index']);
             Route::post('/list', [KategoriController::class, 'list']);
@@ -124,7 +130,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/export_pdf', [KategoriController::class, 'export_pdf']);
         });
     });
-    Route::middleware(['authorize:MNG,ADM,STF,JTP'])->group(function () {
+
+    Route::middleware(['authorize:ADM,MNG,STF'])->group(function () {
         Route::group(['prefix' => 'supplier'], function () {
             Route::get('/', [SupplierController::class, 'index']);
             Route::post('/list', [SupplierController::class, 'list']);
@@ -147,5 +154,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/export_pdf', [SupplierController::class, 'export_pdf']);
         });
     });
+});
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [App\Http\Controllers\UserController::class, 'profile']);
+    Route::post('/profile/update-picture', [App\Http\Controllers\UserController::class, 'updateProfilePicture']);
 });

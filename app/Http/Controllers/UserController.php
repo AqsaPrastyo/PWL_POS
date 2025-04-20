@@ -98,7 +98,7 @@ class UserController extends Controller
         return redirect('/user')->with('success', 'Data user berhasil disimpan');
     }
 
-    public function show(string $id)
+    public function show(String $id)
     {
         $user = UserModel::with('level')->find($id);
         $breadcrumb = (object) [
@@ -112,7 +112,7 @@ class UserController extends Controller
         return view('user.show', compact('breadcrumb', 'page', 'user', 'activeMenu'));
     }
 
-    public function edit(string $id)
+    public function edit(String $id)
     {
         $user = UserModel::find($id);
         $level = LevelModel::all();
@@ -204,7 +204,7 @@ class UserController extends Controller
         return redirect('/');
     }
 
-    public function show_ajax(string $id)
+    public function show_ajax(String $id)
     {
         $user = UserModel::find($id);
         $level = LevelModel::select('level_id', 'level_nama')->get();
@@ -212,7 +212,7 @@ class UserController extends Controller
         return view('user.show_ajax', compact('user', 'level'));
     }
 
-    public function edit_ajax(string $id)
+    public function edit_ajax(String $id)
     {
         $user = UserModel::find($id);
         $level = LevelModel::select('level_id', 'level_nama')->get();
@@ -426,18 +426,67 @@ class UserController extends Controller
         exit;
     }
 
+
     public function export_pdf()
     {
-        $users = UserModel::select('user_id', 'username', 'nama', 'level_id')
+        $user = UserModel::select('user_id', 'username', 'nama', 'level_id')
             ->with('level')
             ->orderBy('user_id')
             ->get();
 
-        $pdf = Pdf::loadView('user.export_pdf', ['users' => $users]);
-        $pdf->setPaper('A4', 'portrait');
-        $pdf->setOptions(['isRemoteEnabled' => true]);
+        $pdf = Pdf::loadView('user.export_pdf', ['user' => $user]);
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->setOption("isRemoteEnabled", true); // set true if there are images from URLs
         $pdf->render();
+        return $pdf->stream('Data User ' . date('Y-m-d H:i:s') . '.pdf');
+    }
 
-        return $pdf->download('Data User ' . date('Y-m-d H:i:s') . '.pdf');
+    public function profile()
+    {
+        $user = auth()->user();
+        $breadcrumb = (object) [
+            'title' => 'Profile',
+            'list' => ['Home', 'Profile']
+        ];
+
+        $page = (object) [
+            'title' => 'User Profile'
+        ];
+
+        $activeMenu = 'profile';
+        return view('profile', compact('breadcrumb', 'page', 'user', 'activeMenu'));
+    }
+
+    public function updateProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $authUser = auth()->user();
+        $user = UserModel::find($authUser->user_id);
+
+        if ($user->profile_picture && file_exists(public_path($user->profile_picture))) {
+            unlink(public_path($user->profile_picture));
+        }
+
+        $file = $request->file('profile_picture');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $filePath = 'uploads/profile/';
+
+        if (!file_exists(public_path($filePath))) {
+            mkdir(public_path($filePath), 0777, true);
+        }
+
+        $file->move(public_path($filePath), $fileName);
+
+        $user->profile_picture = $filePath . $fileName;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Profile picture updated successfully',
+            'image_url' => $user->getProfilePictureUrl()
+        ]);
     }
 }
