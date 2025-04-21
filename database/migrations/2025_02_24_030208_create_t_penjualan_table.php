@@ -17,6 +17,7 @@ return new class extends Migration
         $table->string('penjualan_kode', 50); // kolom penjualan_kode (string, panjang 50)
         $table->string('pembeli', 50); // kolom pembeli (string, panjang 50)
         $table->dateTime('penjualan_tanggal'); // kolom penjualan_tanggal (datetime)
+        $table->integer('total_harga')->default(0); // kolom total_harga (integer, default 0)
         $table->timestamps(); // kolom created_at dan updated_at
         
         // Menambahkan foreign key (user_id merujuk ke tabel users)

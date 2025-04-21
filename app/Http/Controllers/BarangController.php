@@ -32,7 +32,8 @@ class BarangController extends Controller
 
     public function list(Request $request)
     {
-        $barangs = BarangModel::select('barang_id', 'barang_kode', 'barang_nama', 'kategori_id', 'harga_beli', 'harga_jual')->with('kategori');
+        $barangs = BarangModel::select('barang_id', 'barang_kode', 'barang_nama', 'kategori_id', 'harga_beli', 'harga_jual')
+            ->with(['kategori', 'stok']);
 
         if ($request->kategori_id) {
             $barangs->where('kategori_id', $request->kategori_id);
@@ -40,13 +41,10 @@ class BarangController extends Controller
 
         return DataTables::of($barangs)
             ->addIndexColumn()
+            ->addColumn('stok', function ($barang) {
+                return $barang->total_stok;
+            })
             ->addColumn('aksi', function ($barang) {
-                // $btn = '<a href="' . url('/barang/' . $barang->barang_id) . '" class="btn btn-info btn-sm">Detail</a> ';
-                // $btn .= '<a href="' . url('/barang/' . $barang->barang_id . '/edit') . '" class="btn btn-warning btn-sm">Edit</a> ';
-                // $btn .= '<form class="d-inline-block" method="POST" action="' .
-                //     url('/barang/' . $barang->barang_id) . '">'
-                //     . csrf_field() . method_field('DELETE') .
-                //     '<button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Apakah Anda yakin menghapus data ini?\');">Hapus</button></form>';
                 $btn = '<button onclick="modalAction(\'' . url('/barang/' . $barang->barang_id . '/show_ajax') . '\')" class="btn btn-info btn-sm">Detail</button> ';
                 $btn .= '<button onclick="modalAction(\'' . url('/barang/' . $barang->barang_id . '/edit_ajax') . '\')" class="btn btn-warning btn-sm">Edit</button> ';
                 $btn .= '<button onclick="modalAction(\'' . url('/barang/' . $barang->barang_id . '/delete_ajax') . '\')" class="btn btn-danger btn-sm">Hapus</button> ';
@@ -58,7 +56,6 @@ class BarangController extends Controller
             ->rawColumns(['aksi'])
             ->make(true);
     }
-
     public function create()
     {
         $breadcrumb = (object) [
@@ -148,12 +145,17 @@ class BarangController extends Controller
 
     public function destroy(String $id)
     {
-        $check = BarangModel::find($id);
-        if (!$check) {
+        $barang = BarangModel::find($id);
+        if (!$barang) {
             return redirect('/barang')->with('error', 'Data barang tidak ditemukan');
         }
+
+        if ($barang->stok()->count() > 0 || $barang->penjualanDetails()->count() > 0) {
+            return redirect('/barang')->with('error', 'Data barang tidak dapat dihapus karena sudah digunakan di stok atau penjualan');
+        }
+
         try {
-            BarangModel::destroy($id);
+            $barang->delete();
             return redirect('/barang')->with('success', 'Data barang berhasil dihapus');
         } catch (\Illuminate\Database\QueryException $e) {
             return redirect('/barang')->with('error', 'Data barang gagal dihapus karena masih terdapat tabel lain yang terkait dengan data ini');

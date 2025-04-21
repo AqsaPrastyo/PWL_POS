@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
                 'level_id' => 1,
                 'username' => 'admin',
                 'nama' => 'Administrator',
-                'password' => bcrypt('admin')
+                'password' => bcrypt('admin123')
             ],
             [
                 'user_id' => 2,

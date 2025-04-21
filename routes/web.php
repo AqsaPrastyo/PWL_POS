@@ -7,8 +7,9 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\StokController;
+use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\AuthController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +22,6 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-
 Route::pattern('id', '[0-9]+');
 Route::get('login', [AuthController::class, 'login'])->name('login');
 Route::post('login', [AuthController::class, 'postlogin']);
@@ -29,7 +29,6 @@ Route::get('logout', [AuthController::class, 'logout'])->middleware('auth');
 
 Route::get('register', [AuthController::class, 'showRegistrationForm'])->name('register');
 Route::post('register', [AuthController::class, 'register']);
-
 
 Route::middleware(['auth'])->group(function () {
 
@@ -154,9 +153,28 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/export_pdf', [SupplierController::class, 'export_pdf']);
         });
     });
-});
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/profile', [App\Http\Controllers\UserController::class, 'profile']);
-    Route::post('/profile/update-picture', [App\Http\Controllers\UserController::class, 'updateProfilePicture']);
+    Route::middleware(['authorize:ADM,MNG,STF'])->group(function () {
+        Route::group(['prefix' => 'stok'], function () {
+            Route::get('/', [StokController::class, 'index'])->name('stok.index');
+            Route::post('/list', [StokController::class, 'list'])->name('stok.list');
+            Route::get('/create', [StokController::class, 'create'])->name('stok.create');
+            Route::post('/', [StokController::class, 'store'])->name('stok.store');
+            Route::get('/{id}/delete_ajax', [StokController::class, 'delete_ajax'])->name('stok.delete_ajax');
+            Route::delete('/{id}/delete_ajax', [StokController::class, 'delete_ajax']);
+        });
+    });
+
+    Route::middleware(['authorize:ADM,MNG,STF'])->group(function () {
+        Route::group(['prefix' => 'penjualan'], function () {
+            Route::get('/', [PenjualanController::class, 'index'])->name('penjualan.index');
+            Route::get('/list', [PenjualanController::class, 'list'])->name('penjualan.list');
+            Route::get('/create', [PenjualanController::class, 'create'])->name('penjualan.create');
+            Route::post('/', [PenjualanController::class, 'store'])->name('penjualan.store');
+            Route::get('/{id}/show_ajax', [PenjualanController::class, 'showAjax'])->name('penjualan.show_ajax');
+        });
+    });
+
+    Route::get('/profile', [UserController::class, 'profile']);
+    Route::post('/profile/update-picture', [UserController::class, 'updateProfilePicture']);
 });

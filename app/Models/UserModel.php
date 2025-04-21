@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\LevelModel;
 
 class UserModel extends Authenticatable
 {
@@ -14,13 +12,7 @@ class UserModel extends Authenticatable
     protected $table = 'm_user';
     protected $primaryKey = 'user_id';
 
-    protected $fillable = [
-        'level_id',
-        'username',
-        'nama',
-        'password',
-        'profile_picture',
-    ];
+    protected $fillable = ['level_id', 'username', 'nama', 'password'];
 
     protected $hidden = ['password'];
 
@@ -28,7 +20,17 @@ class UserModel extends Authenticatable
 
     public function level()
     {
-        return $this->hasOne(LevelModel::class, 'level_id', 'level_id');
+        return $this->belongsTo(LevelModel::class, 'level_id', 'level_id');
+    }
+
+    public function stok()
+    {
+        return $this->hasMany(StokModel::class, 'user_id', 'user_id');
+    }
+
+    public function penjualans()
+    {
+        return $this->hasMany(PenjualanModel::class, 'user_id', 'user_id');
     }
 
     public function getRoleName()
