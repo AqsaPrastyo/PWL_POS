@@ -23,4 +23,9 @@ class PenjualanDetailModel extends Model
     {
         return $this->belongsTo(PenjualanModel::class, 'penjualan_id', 'penjualan_id');
     }
+
+    public function getProductImage()
+     {
+         return $this->barang->image ?? null;
+     }
 }
